@@ -1,4 +1,4 @@
-//TODO: Replace the config with API call to a free or open sourced Public API with hotel data - 01/16/2025
+//TODO: Replace the config with an API call to a free or open sourced Public API with hotel data; similar to the Hilton API - 01/16/2025
 const config = {
   hotelName: "Sample Hotel",
   rooms: [
