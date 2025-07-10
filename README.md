@@ -1,7 +1,7 @@
 # Scriptables
 
 > **Frustrated by rising App Store costs?**  
-> **Missing the ability to write automation scripts like you do on your computer?**
+> **Missing the ability to write automation scripts like you do on your laptop or desktop?**
 > **Enjoy your device’s hardware but want to do more with it?**
 
 With Scriptable, you can take almost complete control of your iOS device through customizable scripts—no app store restrictions or fees involved.
