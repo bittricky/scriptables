@@ -6,12 +6,9 @@
 
 With Scriptable, you can take almost complete control of your iOS device through customizable scripts—no app store restrictions or fees involved.
 
-Leverage JavaScript to automate tasks, integrate with APIs, access device features, and streamline your daily workflow. Turn your iPhone into a programmable tool that works precisely the way you need.
+Leverage JavaScript to automate tasks, integrate with APIs, access device features, display analytics, or even streamline processes. Turn your iPhone into a programmable tool that works precisely the way you need it, maybe even more.
 
-Customize and Automate Your iPhone with Scriptable.
-
-
-# iOS Scriptable Technical Documentation
+Customize and Automate Your iPhone using Scriptable.
 
 ## What is Scriptable?
 
@@ -19,7 +16,7 @@ Scriptable is a powerful automation application for iOS that enables developers 
 
 Scriptable was developed by [Simon B. Støvring](https://simonbs.dev/) and serves as a bridge between JavaScript and iOS's native functionality.
 
-## What Scriptable Does?
+## What does Scriptable do?
 
 Scriptable provides it's own automation platform for iOS devices with the following capabilities:
 
