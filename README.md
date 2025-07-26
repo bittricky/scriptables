@@ -10,7 +10,7 @@ With Scriptable, you can take almost complete control of your iOS device through
 
 Leverage JavaScript to automate tasks, integrate with APIs, access device features, display analytics, or even streamline processes. Turn your iPhone into a programmable tool that works precisely the way you need it, maybe even more.
 
-Customize and Automate Your iPhone with Scriptable — Shape Your Own Digital World
+Customize and Automate Your iOS Device with Scriptable — Shape Your Own Digital World
 
 ## What is Scriptable?
 
