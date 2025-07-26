@@ -1,5 +1,17 @@
 const config = {
-  affirmationUrl: "https://www.affirmations.dev",
+  useRandomApi: true,
+
+  apis: {
+    affirmations: {
+      url: "https://www.affirmations.dev",
+      name: "Affirmations.dev",
+    },
+    zenquotes: {
+      url: "https://zenquotes.io/api/random",
+      name: "ZenQuotes.io",
+    },
+  },
+
   refreshInterval: 30, // minutes
   maxRetries: 3,
   timeout: 10000, // 10 seconds
@@ -39,8 +51,13 @@ function getWidgetSize() {
 }
 
 async function fetchAffirmation() {
-  const cacheKey = "cached_affirmation";
-  const cacheTimeKey = "cache_time";
+  const apiKeys = Object.keys(config.apis);
+  const selectedApi = config.useRandomApi
+    ? apiKeys[Math.floor(Math.random() * apiKeys.length)]
+    : config.apiSource || "affirmations";
+
+  const cacheKey = `cached_affirmation_${selectedApi}`;
+  const cacheTimeKey = `cache_time_${selectedApi}`;
   const fm = FileManager.local();
 
   try {
@@ -55,36 +72,56 @@ async function fetchAffirmation() {
         const cachedAffirmation = fm.readString(
           fm.joinPath(fm.documentsDirectory(), cacheKey)
         );
-        return cachedAffirmation;
+        return JSON.parse(cachedAffirmation);
       }
     }
 
     for (let attempt = 1; attempt <= config.maxRetries; attempt++) {
       try {
-        const request = new Request(config.affirmationUrl);
+        const apiConfig = config.apis[selectedApi];
+        const request = new Request(apiConfig.url);
         request.timeoutInterval = config.timeout;
 
         const response = await request.loadJSON();
+        let affirmationData;
 
-        if (response && response.affirmation) {
-          // Cache the new affirmation
+        if (selectedApi === "affirmations") {
+          if (response && response.affirmation) {
+            affirmationData = {
+              text: response.affirmation,
+              author: null,
+              source: apiConfig.name,
+            };
+          }
+        } else if (selectedApi === "zenquotes") {
+          if (response && Array.isArray(response) && response.length > 0) {
+            const quote = response[0];
+            affirmationData = {
+              text: quote.q,
+              author: quote.a,
+              source: apiConfig.name,
+            };
+          }
+        }
+
+        if (affirmationData) {
           fm.writeString(
             fm.joinPath(fm.documentsDirectory(), cacheKey),
-            response.affirmation
+            JSON.stringify(affirmationData)
           );
           fm.writeString(
             fm.joinPath(fm.documentsDirectory(), cacheTimeKey),
             new Date().getTime().toString()
           );
 
-          return response.affirmation;
+          return affirmationData;
         }
       } catch (error) {
         console.log(`Attempt ${attempt} failed: ${error.message}`);
         if (attempt === config.maxRetries) {
           throw error;
         }
-        // Wait before retry (exponential backoff)
+
         await new Promise((resolve) =>
           setTimeout(resolve, Math.pow(2, attempt) * 1000)
         );
@@ -95,23 +132,42 @@ async function fetchAffirmation() {
   } catch (error) {
     console.error("Error fetching affirmation:", error.message);
 
-    // Try to return cached affirmation if available
     if (fm.fileExists(fm.joinPath(fm.documentsDirectory(), cacheKey))) {
-      return fm.readString(fm.joinPath(fm.documentsDirectory(), cacheKey));
+      return JSON.parse(
+        fm.readString(fm.joinPath(fm.documentsDirectory(), cacheKey))
+      );
     }
 
-    // Fallback affirmations
+    if (config.useRandomApi) {
+      const otherApiKeys = apiKeys.filter((key) => key !== selectedApi);
+      for (const apiKey of otherApiKeys) {
+        const fallbackCacheKey = `cached_affirmation_${apiKey}`;
+        if (
+          fm.fileExists(fm.joinPath(fm.documentsDirectory(), fallbackCacheKey))
+        ) {
+          return JSON.parse(
+            fm.readString(
+              fm.joinPath(fm.documentsDirectory(), fallbackCacheKey)
+            )
+          );
+        }
+      }
+    }
+
     const fallbackAffirmations = [
       "You are capable of amazing things.",
       "Today is full of possibilities.",
       "You have the strength to overcome challenges.",
       "Your potential is limitless.",
-      "You are worthy of love and respect.",
     ];
 
-    return fallbackAffirmations[
-      Math.floor(Math.random() * fallbackAffirmations.length)
-    ];
+    return {
+      text: fallbackAffirmations[
+        Math.floor(Math.random() * fallbackAffirmations.length)
+      ],
+      author: null,
+      source: "Fallback",
+    };
   }
 }
 
@@ -126,7 +182,7 @@ async function createWidget(size) {
   );
 
   try {
-    const affirmation = await fetchAffirmation();
+    const affirmationData = await fetchAffirmation();
 
     const mainStack = widget.addStack();
     mainStack.layoutVertically();
@@ -135,7 +191,8 @@ async function createWidget(size) {
       mainStack.addSpacer();
     }
 
-    const textElement = mainStack.addText(affirmation);
+    // Main affirmation text
+    const textElement = mainStack.addText(affirmationData.text);
     textElement.font = Font.boldSystemFont(styling.fonts[size]);
     textElement.textColor = styling.textColor;
     textElement.centerAlignText();
@@ -143,26 +200,36 @@ async function createWidget(size) {
     switch (size) {
       case "small":
         textElement.minimumScaleFactor = 0.7;
-        textElement.lineLimit = 4;
+        textElement.lineLimit = 3;
         break;
       case "medium":
         textElement.minimumScaleFactor = 0.8;
-        textElement.lineLimit = 6;
+        textElement.lineLimit = 5;
         break;
       case "large":
         textElement.minimumScaleFactor = 0.9;
-        textElement.lineLimit = 8;
+        textElement.lineLimit = 7;
         break;
+    }
+
+    if (affirmationData.author && size !== "small") {
+      mainStack.addSpacer(styling.spacing);
+      const authorElement = mainStack.addText(`— ${affirmationData.author}`);
+      authorElement.font = Font.italicSystemFont(styling.fonts[size] - 4);
+      authorElement.textColor = styling.accentColor;
+      authorElement.centerAlignText();
     }
 
     if (size !== "small") {
       mainStack.addSpacer();
     }
+
     if (size === "large") {
       mainStack.addSpacer(4);
-      const timestamp = mainStack.addText(
-        `Updated: ${new Date().toLocaleTimeString()}`
-      );
+      const footerText = `${
+        affirmationData.source
+      } • Updated: ${new Date().toLocaleTimeString()}`;
+      const timestamp = mainStack.addText(footerText);
       timestamp.font = Font.systemFont(10);
       timestamp.textColor = new Color("#888888");
       timestamp.centerAlignText();
