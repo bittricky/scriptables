@@ -50,7 +50,7 @@ Scriptable excels at integrating with external APIs and web services through its
 - **Quick Access**: Run scripts by 3D touching the app icon
 - **File-Based Storage**: Scripts are stored as plain JS files on disk
 
-## How Scriptable Works?
+## How Do Scripts on Scriptable Work?
 
 ### Architecture
 
@@ -112,7 +112,7 @@ Common API integration patterns include:
 - **Web Services:** Consume any RESTful API that returns data in formats like JSON or XML.
 
 
-### This seems very similar to [userscripts](https://github.com/bittricky/userscripts), but how do they compare?
+### This seems very similar to [userscripts](https://github.com/bittricky/userscripts), how do they compare?
 
 #### Similarities
 - **JavaScript-Based**: Both use JavaScript for automation
