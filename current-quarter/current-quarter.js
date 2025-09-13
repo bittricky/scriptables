@@ -1,5 +1,6 @@
 /************ CONFIG ************/
-const ACCENT_OUTER = "#3B82F6";
+const ACCENT_OUTER = "#8B5CF6";
+const ACCENT_TEXT = "#3B82F6";
 const ACCENT_INNER = "#FACC15";
 const BASE_RING_DARK = "#433366";
 const BASE_RING_LIGHT = "#E5DEFF";
@@ -253,7 +254,7 @@ async function createWidget() {
     `→ ${info.daysToNext} days to ${qLabel(info.nextYear, info.nextQuarter)}`
   );
   l3.font = Font.semiboldSystemFont(12);
-  l3.textColor = new Color(ACCENT_OUTER);
+  l3.textColor = new Color(ACCENT_TEXT);
 
   if (SHOW_FOOTER_DATE) {
     w.addSpacer();
