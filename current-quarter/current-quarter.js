@@ -1,9 +1,11 @@
 /************ CONFIG ************/
-const ACCENT_OUTER = "#8B5CF6";
-const ACCENT_TEXT = "#3B82F6";
-const ACCENT_INNER = "#FACC15";
-const BASE_RING_DARK = "#433366";
-const BASE_RING_LIGHT = "#E5DEFF";
+const ACCENT_OUTER = "#8B5CF6"; // vivid purple (year)
+const ACCENT_INNER = "#FACC15"; // vibrant yellow (quarter)
+const ACCENT_TEXT = "#3B82F6"; // blue for side text
+
+// Base ring colors
+const BASE_RING_DARK = "#433366"; // deep contemplative purple
+const BASE_RING_LIGHT = "#E5DEFF"; // soft lavender
 
 // Backgrounds tuned to complement rings
 const BG_GRAD_TOP = "#2A1A5E";
@@ -16,13 +18,10 @@ const SHOW_FOOTER_DATE = true;
 
 // Ring geometry
 const DIAMETER = 76; // overall size (px)
-const OUTER_STROKE = 6; // outer thickness
-const INNER_STROKE = 6; // inner thickness
-const RING_GAP = 6; // gap between rings (visual)
-const ARC_STEPS = 160; // higher = smoother arc
-
-// Center label
-const SHOW_CENTER = true; // show Qn + % in the middle
+const OUTER_STROKE = 8; // thicker for visibility
+const INNER_STROKE = 8; // thicker for visibility
+const RING_GAP = 6; // gap between rings
+const ARC_STEPS = 160; // smoothness
 /********************************/
 
 // ---------- Date & Quarter helpers ----------
@@ -119,8 +118,12 @@ function dualRingImage(diameter, yearPct, quarterPct) {
   const innerRadius =
     outerRadius - (OUTER_STROKE / 2 + RING_GAP + INNER_STROKE / 2);
 
-  // Base rings
-  dc.setStrokeColor(dynamicColor(BASE_RING_DARK, BASE_RING_LIGHT));
+  // Base ring color
+  const baseRingColor = Color.dynamic(
+    new Color(BASE_RING_LIGHT),
+    new Color(BASE_RING_DARK)
+  );
+  dc.setStrokeColor(baseRingColor);
 
   // Outer base
   dc.setLineWidth(OUTER_STROKE);
@@ -150,7 +153,15 @@ function dualRingImage(diameter, yearPct, quarterPct) {
   // Outer: year
   if (yearPct > 0) {
     const p1 = new Path();
-    addArcPolyline(p1, cx, cy, outerRadius, yearPct / 100, start, ARC_STEPS);
+    addArcPolyline(
+      p1,
+      cx,
+      cy,
+      outerRadius,
+      Math.max(0, Math.min(1, yearPct / 100)),
+      start,
+      ARC_STEPS
+    );
     dc.setStrokeColor(new Color(ACCENT_OUTER));
     dc.setLineWidth(OUTER_STROKE);
     dc.addPath(p1);
@@ -160,35 +171,19 @@ function dualRingImage(diameter, yearPct, quarterPct) {
   // Inner: quarter
   if (quarterPct > 0) {
     const p2 = new Path();
-    addArcPolyline(p2, cx, cy, innerRadius, quarterPct / 100, start, ARC_STEPS);
+    addArcPolyline(
+      p2,
+      cx,
+      cy,
+      innerRadius,
+      Math.max(0, Math.min(1, quarterPct / 100)),
+      start,
+      ARC_STEPS
+    );
     dc.setStrokeColor(new Color(ACCENT_INNER));
     dc.setLineWidth(INNER_STROKE);
     dc.addPath(p2);
     dc.strokePath();
-  }
-
-  // Center label
-  if (SHOW_CENTER) {
-    const label = `${Math.round(quarterPct)}%`;
-    const txt = new DrawContext();
-    txt.opaque = false;
-    txt.size = new Size(diameter, diameter);
-
-    const t = new Font("HelveticaNeue-Bold", 11);
-    txt.setFont(t);
-    txt.setTextAlignedCenter();
-    // Center label color tuned to purple hues
-    txt.setTextColor(dynamicColor("#EFE9FF", "#3A2E6E"));
-    txt.drawTextInRect(label, new Rect(0, cy - 7, diameter, 14));
-
-    // Compose
-    const baseImg = dc.getImage();
-    const result = new DrawContext();
-    result.opaque = false;
-    result.size = new Size(diameter, diameter);
-    result.drawImageAtPoint(baseImg, new Point(0, 0));
-    result.drawImageAtPoint(txt.getImage(), new Point(0, 0));
-    return result.getImage();
   }
 
   return dc.getImage();
@@ -208,7 +203,6 @@ async function createWidget() {
 
   const cal = header.addImage(SFSymbol.named("calendar").image);
   cal.imageSize = new Size(16, 16);
-  // Purple-leaning icon tint (dark → light)
   cal.tintColor = dynamicColor("#D8CCFF", "#5C4DD6");
   header.addSpacer(6);
 
@@ -218,7 +212,7 @@ async function createWidget() {
       info.nextQuarter
     )}`
   );
-  // Keep strong contrast but with a subtle purple undertone on light
+
   title.textColor = dynamicColor("#ECEAFF", "#1B2040");
   title.font = USE_SYSTEM_FONT
     ? Font.boldSystemFont(14)
@@ -242,13 +236,11 @@ async function createWidget() {
 
   const l1 = right.addText(`Year:   ${fmtPct(info.yearPct)}`);
   l1.font = Font.mediumSystemFont(13);
-  // Deep purple-ish for light mode, soft lavender for dark mode
-  l1.textColor = dynamicColor("#E7E0FF", "#2E2766");
+  l1.textColor = new Color(ACCENT_OUTER);
 
   const l2 = right.addText(`Quarter: ${fmtPct(info.qPct)}`);
   l2.font = Font.mediumSystemFont(13);
-  // Secondary purple accent for the quarter line
-  l2.textColor = dynamicColor("#D6CBFF", "#5A4FB8");
+  l2.textColor = new Color(ACCENT_INNER);
 
   const l3 = right.addText(
     `→ ${info.daysToNext} days to ${qLabel(info.nextYear, info.nextQuarter)}`
