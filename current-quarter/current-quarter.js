@@ -1,52 +1,282 @@
-const now = new Date();
-const year = now.getFullYear();
-const month = now.getMonth() + 1;
-const currentQuarter = Math.ceil(month / 3);
+/************ CONFIG ************/
+const ACCENT_OUTER = "#3B82F6";
+const ACCENT_INNER = "#FACC15";
+const BASE_RING_DARK = "#433366";
+const BASE_RING_LIGHT = "#E5DEFF";
 
-const qStarts = [
-  new Date(year, 0, 1), // Q1
-  new Date(year, 3, 1), // Q2
-  new Date(year, 6, 1), // Q3
-  new Date(year, 9, 1), // Q4
-];
+// Backgrounds tuned to complement rings
+const BG_GRAD_TOP = "#2A1A5E";
+const BG_GRAD_BOTTOM = "#3B1D82";
+const LIGHT_BG_TOP = "#FAF7FF";
+const LIGHT_BG_BOTTOM = "#E0DBFF";
 
-const idx = currentQuarter - 1;
-const nextIdx = (idx + 1) % 4;
-const nextQuarter = nextIdx + 1;
-const nextQuarterYear = nextIdx === 0 ? year + 1 : year;
-const nextStart = nextIdx === 0 ? new Date(year + 1, 0, 1) : qStarts[nextIdx];
+const USE_SYSTEM_FONT = true;
+const SHOW_FOOTER_DATE = true;
 
-// Helper: midnight for clean day math
-const atMidnight = (d) => {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x;
-};
-const msPerDay = 86400000;
+// Ring geometry
+const DIAMETER = 76; // overall size (px)
+const OUTER_STROKE = 6; // outer thickness
+const INNER_STROKE = 6; // inner thickness
+const RING_GAP = 6; // gap between rings (visual)
+const ARC_STEPS = 160; // higher = smoother arc
 
-const daysLeft = Math.max(
-  0,
-  Math.ceil((atMidnight(nextStart) - atMidnight(now)) / msPerDay)
-);
+// Center label
+const SHOW_CENTER = true; // show Qn + % in the middle
+/********************************/
 
-const current = `Q${currentQuarter} ${year}`;
-const abbrev_current = `Q${currentQuarter}`;
-const next = `Q${nextQuarter} ${nextQuarterYear}`;
-const abbrev_next = `Q${nextQuarter}`;
+// ---------- Date & Quarter helpers ----------
+function getQuarterInfo(d = new Date()) {
+  const y = d.getFullYear();
+  const m = d.getMonth() + 1;
+  const q = Math.ceil(m / 3);
+  const startMonth = (q - 1) * 3 + 1;
+  const endMonth = startMonth + 2;
 
-const yearStart = new Date(year, 0, 1);
-const nextYearStart = new Date(year + 1, 0, 1);
-const elapsed = atMidnight(now) - atMidnight(yearStart);
-const total = atMidnight(nextYearStart) - atMidnight(yearStart);
-const year_progress = Math.floor((elapsed / total) * 1000) / 10; // 1 decimal
+  const qStart = new Date(y, startMonth - 1, 1, 0, 0, 0, 0);
+  const qEnd = new Date(y, endMonth, 0, 23, 59, 59, 999);
 
-let display = `${current} (${abbrev_current}) • ${daysLeft} d → ${next} (${abbrev_next})\n`;
-display += `---\n`;
-display += `Current quarter: ${current} (${abbrev_current})\n`;
-display += `Next quarter: ${next} (${abbrev_next})\n`;
-display += `Days remaining to next quarter: ${daysLeft} d\n`;
-display += `Year Progress: ${year_progress}%`;
+  const nextQuarter = q === 4 ? 1 : q + 1;
+  const nextYear = q === 4 ? y + 1 : y;
+  const nextStart = new Date(nextYear, (nextQuarter - 1) * 3, 1, 0, 0, 0, 0);
 
-console.log(display);
-QuickLook.present(display);
-Script.setShortcutOutput(display);
+  const yearStart = new Date(y, 0, 1, 0, 0, 0, 0);
+  const yearEnd = new Date(y, 11, 31, 23, 59, 59, 999);
+
+  const daysToNext = Math.max(0, Math.ceil((nextStart - d) / 86400000));
+  const yearPct = Math.min(
+    100,
+    Math.max(0, ((d - yearStart) / (yearEnd - yearStart)) * 100)
+  );
+  const qPct = Math.min(
+    100,
+    Math.max(0, ((d - qStart) / (qEnd - qStart)) * 100)
+  );
+
+  return {
+    year: y,
+    quarter: q,
+    nextQuarter,
+    nextYear,
+    nextStart,
+    daysToNext,
+    yearPct,
+    qPct,
+  };
+}
+
+const qLabel = (y, q) => `Q${q} ${y}`;
+const dynamicColor = (dark, light) =>
+  Color.dynamic(new Color(light), new Color(dark));
+const fmtPct = (n) => `${n.toFixed(1)}%`;
+
+// ---------- UI helpers ----------
+function gradientBackground(widget) {
+  const g = new LinearGradient();
+  g.colors = [
+    dynamicColor(BG_GRAD_TOP, LIGHT_BG_TOP),
+    dynamicColor(BG_GRAD_BOTTOM, LIGHT_BG_BOTTOM),
+  ];
+  g.locations = [0, 1];
+  g.startPoint = new Point(0, 0);
+  g.endPoint = new Point(0, 1);
+  widget.backgroundGradient = g;
+}
+
+/**
+ * Draws an arc as a polyline from startAngle to endAngle (radians).
+ * pct: 0..1
+ */
+function addArcPolyline(path, cx, cy, radius, pct, startAngle, steps) {
+  const clamped = Math.max(0, Math.min(1, pct));
+  const endAngle = startAngle + 2 * Math.PI * clamped;
+
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const a = startAngle + (endAngle - startAngle) * t;
+    const x = cx + radius * Math.cos(a);
+    const y = cy + radius * Math.sin(a);
+    if (i === 0) path.move(new Point(x, y));
+    else path.addLine(new Point(x, y));
+  }
+}
+
+/**
+ * Produces a dual-ring image:
+ * - Outer ring shows year progress
+ * - Inner ring shows quarter progress
+ */
+function dualRingImage(diameter, yearPct, quarterPct) {
+  const dc = new DrawContext();
+  dc.opaque = false;
+  dc.size = new Size(diameter, diameter);
+
+  const cx = diameter / 2;
+  const cy = diameter / 2;
+
+  // Radii
+  const outerRadius = (diameter - OUTER_STROKE) / 2;
+  const innerRadius =
+    outerRadius - (OUTER_STROKE / 2 + RING_GAP + INNER_STROKE / 2);
+
+  // Base rings
+  dc.setStrokeColor(dynamicColor(BASE_RING_DARK, BASE_RING_LIGHT));
+
+  // Outer base
+  dc.setLineWidth(OUTER_STROKE);
+  dc.strokeEllipse(
+    new Rect(
+      cx - outerRadius,
+      cy - outerRadius,
+      outerRadius * 2,
+      outerRadius * 2
+    )
+  );
+
+  // Inner base
+  dc.setLineWidth(INNER_STROKE);
+  dc.strokeEllipse(
+    new Rect(
+      cx - innerRadius,
+      cy - innerRadius,
+      innerRadius * 2,
+      innerRadius * 2
+    )
+  );
+
+  // Progress arcs (12 o’clock start, clockwise)
+  const start = -Math.PI / 2;
+
+  // Outer: year
+  if (yearPct > 0) {
+    const p1 = new Path();
+    addArcPolyline(p1, cx, cy, outerRadius, yearPct / 100, start, ARC_STEPS);
+    dc.setStrokeColor(new Color(ACCENT_OUTER));
+    dc.setLineWidth(OUTER_STROKE);
+    dc.addPath(p1);
+    dc.strokePath();
+  }
+
+  // Inner: quarter
+  if (quarterPct > 0) {
+    const p2 = new Path();
+    addArcPolyline(p2, cx, cy, innerRadius, quarterPct / 100, start, ARC_STEPS);
+    dc.setStrokeColor(new Color(ACCENT_INNER));
+    dc.setLineWidth(INNER_STROKE);
+    dc.addPath(p2);
+    dc.strokePath();
+  }
+
+  // Center label
+  if (SHOW_CENTER) {
+    const label = `${Math.round(quarterPct)}%`;
+    const txt = new DrawContext();
+    txt.opaque = false;
+    txt.size = new Size(diameter, diameter);
+
+    const t = new Font("HelveticaNeue-Bold", 11);
+    txt.setFont(t);
+    txt.setTextAlignedCenter();
+    // Center label color tuned to purple hues
+    txt.setTextColor(dynamicColor("#EFE9FF", "#3A2E6E"));
+    txt.drawTextInRect(label, new Rect(0, cy - 7, diameter, 14));
+
+    // Compose
+    const baseImg = dc.getImage();
+    const result = new DrawContext();
+    result.opaque = false;
+    result.size = new Size(diameter, diameter);
+    result.drawImageAtPoint(baseImg, new Point(0, 0));
+    result.drawImageAtPoint(txt.getImage(), new Point(0, 0));
+    return result.getImage();
+  }
+
+  return dc.getImage();
+}
+
+// ---------- Build widget ----------
+async function createWidget() {
+  const info = getQuarterInfo(new Date());
+
+  const w = new ListWidget();
+  gradientBackground(w);
+  w.setPadding(12, 14, 12, 14);
+
+  // Header
+  const header = w.addStack();
+  header.centerAlignContent();
+
+  const cal = header.addImage(SFSymbol.named("calendar").image);
+  cal.imageSize = new Size(16, 16);
+  // Purple-leaning icon tint (dark → light)
+  cal.tintColor = dynamicColor("#D8CCFF", "#5C4DD6");
+  header.addSpacer(6);
+
+  const title = header.addText(
+    `${qLabel(info.year, info.quarter)}  •  ${info.daysToNext} d →  ${qLabel(
+      info.nextYear,
+      info.nextQuarter
+    )}`
+  );
+  // Keep strong contrast but with a subtle purple undertone on light
+  title.textColor = dynamicColor("#ECEAFF", "#1B2040");
+  title.font = USE_SYSTEM_FONT
+    ? Font.boldSystemFont(14)
+    : new Font("Menlo-Bold", 12);
+
+  w.addSpacer(8);
+
+  // Main layout: dual ring + labels
+  const main = w.addStack();
+  main.layoutHorizontally();
+  main.centerAlignContent();
+  main.spacing = 10;
+
+  const ringImg = dualRingImage(DIAMETER, info.yearPct, info.qPct);
+  const ring = main.addImage(ringImg);
+  ring.imageSize = new Size(DIAMETER, DIAMETER);
+
+  const right = main.addStack();
+  right.layoutVertically();
+  right.spacing = 3;
+
+  const l1 = right.addText(`Year:   ${fmtPct(info.yearPct)}`);
+  l1.font = Font.mediumSystemFont(13);
+  // Deep purple-ish for light mode, soft lavender for dark mode
+  l1.textColor = dynamicColor("#E7E0FF", "#2E2766");
+
+  const l2 = right.addText(`Quarter: ${fmtPct(info.qPct)}`);
+  l2.font = Font.mediumSystemFont(13);
+  // Secondary purple accent for the quarter line
+  l2.textColor = dynamicColor("#D6CBFF", "#5A4FB8");
+
+  const l3 = right.addText(
+    `→ ${info.daysToNext} days to ${qLabel(info.nextYear, info.nextQuarter)}`
+  );
+  l3.font = Font.semiboldSystemFont(12);
+  l3.textColor = new Color(ACCENT_OUTER);
+
+  if (SHOW_FOOTER_DATE) {
+    w.addSpacer();
+    const foot = w.addStack();
+    const clock = foot.addImage(SFSymbol.named("clock").image);
+    clock.imageSize = new Size(14, 14);
+    clock.tintColor = dynamicColor("#AEBBD3", "#52617B");
+    foot.addSpacer(5);
+    const fTxt = foot.addText(
+      `Next quarter starts: ${info.nextStart.toDateString()}`
+    );
+    fTxt.font = Font.regularSystemFont(11);
+    fTxt.textColor = dynamicColor("#AEBBD3", "#52617B");
+  }
+
+  return w;
+}
+
+// ---------- Run ----------
+const widget = await createWidget();
+if (config.runsInWidget) {
+  Script.setWidget(widget);
+} else {
+  widget.presentMedium();
+}
+Script.complete();
