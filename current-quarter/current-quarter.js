@@ -186,6 +186,10 @@ function dualRingImage(diameter, yearPct, quarterPct) {
     dc.strokePath();
   }
 
+  const r = 7; // radius (px)
+  dc.setFillColor(new Color("#EF4444"));
+  dc.fillEllipse(new Rect(cx - r, cy - r, r * 2, r * 2));
+
   return dc.getImage();
 }
 
