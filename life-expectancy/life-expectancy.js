@@ -1,5 +1,8 @@
+// Variables used by Scriptable.
+// These must be at the very top of the file. Do not edit.
+// icon-color: deep-blue; icon-glyph: user-clock;
 /**
- * Life Calendar (Large) — Scriptable
+ * Life Expectancy (Large) — Scriptable
  * Preview -> Native widget (338x354)
  *
  * Optional widget parameter: "<mode>|<age>|<YYYY-MM-DD>"
@@ -10,38 +13,36 @@
 
 //////////////////////// THEME ////////////////////////
 const UI = {
-  // Flat single-surface background (no inner card/border)
-  BG: new Color("#1a1b26"),
+  BG: new Color("#05050d"),
   OUTER_PAD: 16,
 
-  // Text
-  TITLE: new Color("#c0caf5"),
-  MUTED: new Color("#565f89"),
+  TITLE: new Color("#e8e6ff"),
+  MUTED: new Color("#8b82a8"),
 
-  // Progress
-  BAR_BG: new Color("#24283b"),
-  BAR_FILL: new Color("#7aa2f7"),
+  BAR_BG: new Color("#14121f"),
+  BAR_FILL: new Color("#7b9cff"),
   BAR_H: 6,
+  BAR_RADIUS: 4,
 
-  // Heatmap
-  HM_LIVED: new Color("#7aa2f7"),
-  HM_NOW: new Color("#bb9af7"),
-  HM_FUTURE: new Color("#24283b"),
+  HM_LIVED: new Color("#5b4b8a"),
+  HM_NOW: new Color("#b794f6"),
+  HM_FUTURE: new Color("#1e1b2e"),
+  HM_BORDER: new Color("#3b4fa3"),
 };
 
 const SPEC = { w: 338, h: 354 };
 
 //////////////////////// CONFIG ////////////////////////
 const CFG = {
-  DOB: "", //YYYY-MM-DD
-  MODE: "lifespan", // lifespan || retirment
-  TARGET_AGE: 80, // lifespan or retirement
+  DOB: "", // YYYY-MM-DD
+  MODE: "lifespan", // lifespan | retirement
+  TARGET_AGE: 80,
 };
 
 (function parseParam() {
   const raw = (args.widgetParameter || "").trim();
   if (!raw) return;
-  const [m, a, d] = raw.split("|").map(s => (s || "").trim());
+  const [m, a, d] = raw.split("|").map((s) => (s || "").trim());
   if (m === "lifespan" || m === "retirement") CFG.MODE = m;
   const age = parseInt(a, 10);
   if (!isNaN(age)) CFG.TARGET_AGE = age;
@@ -64,7 +65,7 @@ const CFG = {
     const left = header.addStack();
     left.layoutVertically();
 
-    const title = left.addText("Life Calendar");
+    const title = left.addText("Now");
     title.textColor = UI.TITLE;
     title.font = Font.semiboldSystemFont(18);
 
@@ -72,7 +73,7 @@ const CFG = {
     const subtitle = left.addText(
       CFG.MODE === "retirement"
         ? `To Retirement (Age ${CFG.TARGET_AGE})`
-        : `Life Expectancy (Age ${CFG.TARGET_AGE})`
+        : `Mileage (Age ${CFG.TARGET_AGE})`
     );
     subtitle.textColor = UI.MUTED;
     subtitle.font = Font.mediumSystemFont(11);
@@ -98,11 +99,11 @@ const CFG = {
     dobText.textColor = UI.TITLE;
     dobText.font = Font.mediumSystemFont(11);
 
-    // ----- Progress -----
-    w.addSpacer(8);
-    addProgress(w, S.pctLived);
+    // ----- Web-style progress bar + % -----
+    w.addSpacer(10);
+    addWebStyleProgress(w, S.pctLived);
 
-    // ----- Heatmap (fixed 7x11 grid with spacing) -----
+    // ----- Heatmap (6x12 grid) -----
     w.addSpacer(10);
     addFixedHeatmap(w, S);
 
@@ -118,7 +119,7 @@ const CFG = {
     const s = w.addStack();
     s.layoutVertically();
     s.setPadding(16, 16, 16, 16);
-    const t = s.addText("Life Calendar — Error");
+    const t = s.addText("Heat Map — Error");
     t.textColor = new Color("#ffb4b4");
     t.font = Font.boldSystemFont(14);
     s.addSpacer(6);
@@ -131,36 +132,47 @@ const CFG = {
 })();
 
 //////////////////////// RENDERING ////////////////////////
-function addProgress(parent, pct) {
-  const wrap = parent.addStack();
-  wrap.layoutVertically();
+function addWebStyleProgress(parent, pct) {
+  const container = parent.addStack();
+  container.layoutVertically();
 
-  const W = 1000, H = UI.BAR_H * 6;
+  // Progress bar container
+  const barStack = container.addStack();
+  barStack.layoutHorizontally();
+  barStack.centerAlignContent();
+
+  const barWidth = 260;
   const dc = new DrawContext();
-  dc.size = new Size(W, H);
+  dc.size = new Size(barWidth, UI.BAR_H);
   dc.opaque = false;
 
+  // Base track
   dc.setFillColor(UI.BAR_BG);
-  round(dc, 0, 0, W, H, 4, true);
+  round(dc, 0, 0, barWidth, UI.BAR_H, UI.BAR_RADIUS, true);
 
+  // Fill
+  const fillW = Math.max(2, Math.floor(barWidth * pct));
   dc.setFillColor(UI.BAR_FILL);
-  round(dc, 0, 0, Math.max(2, Math.floor(W * pct)), H, 4, true);
+  round(dc, 0, 0, fillW, UI.BAR_H, UI.BAR_RADIUS, true);
 
   const img = dc.getImage();
-  const iv = wrap.addImage(img);
-  iv.imageSize = new Size(0, UI.BAR_H);
+  const barImg = barStack.addImage(img);
+  barImg.imageSize = new Size(barWidth, UI.BAR_H);
+  barImg.leftAlignImage();
 
-  const lbl = parent.addText(`${(pct * 100).toFixed(1)}% lived`);
-  lbl.textColor = UI.MUTED;
-  lbl.font = Font.mediumSystemFont(10);
+  // Progress text
+  container.addSpacer(4);
+  const pctText = container.addText(`${(pct * 100).toFixed(1)}% lived`);
+  pctText.textColor = UI.BAR_FILL;
+  pctText.font = Font.mediumSystemFont(10);
 }
 
-// Fixed 7x11 grid with 3px spacing
+// 6x12 grid with blue borders
 function addFixedHeatmap(parent, S) {
-  const rows = 7;
-  const cols = 11;
+  const rows = 6;
+  const cols = 12;
   const GAP = 3;
-  const SIZE = 24;
+  const SIZE = 23;
   const RADIUS = 2;
 
   const canvasW = cols * SIZE + (cols - 1) * GAP;
@@ -183,8 +195,14 @@ function addFixedHeatmap(parent, S) {
       if (idx < livedYears) fill = UI.HM_LIVED;
       else if (idx === livedYears) fill = UI.HM_NOW;
 
+      // Draw filled cell
       dc.setFillColor(fill);
       round(dc, x, y, SIZE, SIZE, RADIUS, true);
+
+      // Draw border
+      dc.setStrokeColor(UI.HM_BORDER);
+      dc.setLineWidth(0.8);
+      round(dc, x, y, SIZE, SIZE, RADIUS, false);
     }
   }
 
@@ -195,7 +213,7 @@ function addFixedHeatmap(parent, S) {
   iv.centerAlignImage();
 }
 
-// Clean centered legend below the grid
+// Legend below grid
 function addLegendBelow(parent) {
   const legend = parent.addStack();
   legend.centerAlignContent();
@@ -242,8 +260,18 @@ function computeStats(dobISO, targetAge) {
 function formatDOB(iso) {
   const d = new Date(`${iso}T00:00:00`);
   const m = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
   ];
   return `${m[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
