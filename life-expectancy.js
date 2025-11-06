@@ -8,14 +8,11 @@
  *     retirement|65|1990-01-15
  */
 
-//////////////////////// THEME (matches your preview) ////////////////////////
+//////////////////////// THEME ////////////////////////
 const UI = {
-  // Surfaces
-  BG: new Color("#0f0f17"),
-  CARD: new Color("#1a1b26"),
-  CARD_RADIUS: 20,
-  OUTER_PAD: 16,  // widget -> card
-  CARD_PAD: 16,   // inside card
+  // Flat single-surface background (no inner card/border)
+  BG: new Color("#1a1b26"),
+  OUTER_PAD: 16,
 
   // Text
   TITLE: new Color("#c0caf5"),
@@ -26,24 +23,21 @@ const UI = {
   BAR_FILL: new Color("#7aa2f7"),
   BAR_H: 6,
 
-  // Heatmap colors (years)
+  // Heatmap
   HM_LIVED: new Color("#7aa2f7"),
   HM_NOW: new Color("#bb9af7"),
   HM_FUTURE: new Color("#24283b"),
-  HM_BORDER: new Color("#414868"),
 };
 
-//////////////////////// TARGET: Large widget px box ////////////////////////
-const SPEC = { w: 338, h: 354 }; // Apple’s large size (portrait column)
+const SPEC = { w: 338, h: 354 };
 
 //////////////////////// CONFIG ////////////////////////
 const CFG = {
   DOB: "", //YYYY-MM-DD
-  MODE: "lifespan",      // "lifespan" | "retirement"
-  TARGET_AGE: 80,        // lifespan age or retirement age
+  MODE: "lifespan", // lifespan || retirment
+  TARGET_AGE: 80, // lifespan or retirement
 };
 
-// Allow widget parameter "<mode>|<age>|<YYYY-MM-DD>"
 (function parseParam() {
   const raw = (args.widgetParameter || "").trim();
   if (!raw) return;
@@ -61,20 +55,11 @@ const CFG = {
     w.backgroundColor = UI.BG;
     w.setPadding(UI.OUTER_PAD, UI.OUTER_PAD, UI.OUTER_PAD, UI.OUTER_PAD);
 
-    // Card
-    const card = w.addStack();
-    card.layoutVertically();
-    card.backgroundColor = UI.CARD;
-    card.cornerRadius = UI.CARD_RADIUS;
-    card.setPadding(UI.CARD_PAD, UI.CARD_PAD, UI.CARD_PAD, UI.CARD_PAD);
-
-    // Stats
     const S = computeStats(CFG.DOB, CFG.TARGET_AGE);
 
     // ----- Header -----
-    const header = card.addStack();
+    const header = w.addStack();
     header.layoutHorizontally();
-    header.centerAlignContent();
 
     const left = header.addStack();
     left.layoutVertically();
@@ -96,53 +81,56 @@ const CFG = {
 
     const right = header.addStack();
     right.layoutVertically();
-    right.setPadding(0,0,0,0);
-
     const years = right.addText(`${S.yearsLived} years`);
     years.textColor = UI.TITLE;
     years.font = Font.semiboldSystemFont(14);
-
     const months = right.addText(`${S.monthsLived.toLocaleString()} months`);
     months.textColor = UI.MUTED;
     months.font = Font.mediumSystemFont(10);
 
     // ----- DOB -----
-    card.addSpacer(8);
-    const dobRow = card.addStack();
+    w.addSpacer(8);
+    const dobRow = w.addStack();
     const born = dobRow.addText("Born: ");
-    born.textColor = UI.MUTED; born.font = Font.mediumSystemFont(11);
+    born.textColor = UI.MUTED;
+    born.font = Font.mediumSystemFont(11);
     const dobText = dobRow.addText(formatDOB(CFG.DOB));
-    dobText.textColor = UI.TITLE; dobText.font = Font.mediumSystemFont(11);
+    dobText.textColor = UI.TITLE;
+    dobText.font = Font.mediumSystemFont(11);
 
     // ----- Progress -----
-    card.addSpacer(8);
-    addProgress(card, S.pctLived);
+    w.addSpacer(8);
+    addProgress(w, S.pctLived);
 
-    // ----- Heatmap (years) -----
-    card.addSpacer(10);
-    addYearsHeatmap(card, S, SPEC);
+    // ----- Heatmap (fixed 7x11 grid with spacing) -----
+    w.addSpacer(10);
+    addFixedHeatmap(w, S);
 
     // ----- Legend -----
-    card.addSpacer(8);
-    addLegend(card);
+    w.addSpacer(8);
+    addLegendBelow(w);
 
     Script.setWidget(w);
     if (config.runsInApp) await w.presentLarge();
   } catch (e) {
     const w = new ListWidget();
     w.backgroundColor = UI.BG;
-    const s = w.addStack(); s.layoutVertically(); s.setPadding(16,16,16,16);
+    const s = w.addStack();
+    s.layoutVertically();
+    s.setPadding(16, 16, 16, 16);
     const t = s.addText("Life Calendar — Error");
-    t.textColor = new Color("#ffb4b4"); t.font = Font.boldSystemFont(14);
+    t.textColor = new Color("#ffb4b4");
+    t.font = Font.boldSystemFont(14);
     s.addSpacer(6);
-    const m = s.addText(String(e)); m.textColor = new Color("#ffb4b4"); m.font = Font.systemFont(11);
+    const m = s.addText(String(e));
+    m.textColor = new Color("#ffb4b4");
+    m.font = Font.systemFont(11);
     Script.setWidget(w);
     if (config.runsInApp) await w.presentLarge();
   }
 })();
 
 //////////////////////// RENDERING ////////////////////////
-
 function addProgress(parent, pct) {
   const wrap = parent.addStack();
   wrap.layoutVertically();
@@ -167,124 +155,103 @@ function addProgress(parent, pct) {
   lbl.font = Font.mediumSystemFont(10);
 }
 
-function addYearsHeatmap(parent, S, spec) {
-  // Compute remaining vertical area exactly for Large: 338x354
-  const contentW = spec.w - 2*UI.OUTER_PAD - 2*UI.CARD_PAD;
-  const contentH = spec.h - 2*UI.OUTER_PAD - 2*UI.CARD_PAD;
-
-  // Estimate occupied vertical space above grid
-  const takenTop =
-    22  + // title+subtitle block approx
-    16  + // DOB row + spacing
-    14  + // progress bar+label
-    10;   // spacer before grid
-  const takenBottom = 20; // legend + spacer
-
-  const gridH = Math.max(120, contentH - takenTop - takenBottom);
-  const gridW = contentW;
-
-  // Layout strategy: choose yearsPerRow based on target age (like your HTML)
-  const yearsPerRow = chooseYearsPerRow(CFG.TARGET_AGE);
-  const rows = Math.ceil(CFG.TARGET_AGE / yearsPerRow);
-
-  // Shrink-to-fit cell size with 3px gaps and 0.5px border
+// Fixed 7x11 grid with 3px spacing
+function addFixedHeatmap(parent, S) {
+  const rows = 7;
+  const cols = 11;
   const GAP = 3;
-  const cellSizeX = Math.floor((gridW - (yearsPerRow - 1) * GAP) / yearsPerRow);
-  const cellSizeY = Math.floor((gridH - (rows - 1) * GAP) / rows);
-  const SIZE = Math.max(6, Math.min(cellSizeX, cellSizeY));
+  const SIZE = 24;
   const RADIUS = 2;
 
-  const canvasW = yearsPerRow * SIZE + (yearsPerRow - 1) * GAP;
+  const canvasW = cols * SIZE + (cols - 1) * GAP;
   const canvasH = rows * SIZE + (rows - 1) * GAP;
 
   const dc = new DrawContext();
   dc.size = new Size(canvasW, canvasH);
   dc.opaque = false;
 
-  const livedYears = S.yearsLived;
-  // Draw cells row-major
+  const totalCells = rows * cols;
+  const livedYears = Math.min(S.yearsLived, totalCells - 1);
+
   for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < yearsPerRow; c++) {
-      const yIndex = r * yearsPerRow + c; // 0-based year
-      if (yIndex >= CFG.TARGET_AGE) break;
+    for (let c = 0; c < cols; c++) {
+      const idx = r * cols + c;
       const x = c * (SIZE + GAP);
       const y = r * (SIZE + GAP);
 
-      // fill color
       let fill = UI.HM_FUTURE;
-      if (yIndex < livedYears) fill = UI.HM_LIVED;
-      else if (yIndex === livedYears) fill = UI.HM_NOW;
+      if (idx < livedYears) fill = UI.HM_LIVED;
+      else if (idx === livedYears) fill = UI.HM_NOW;
 
       dc.setFillColor(fill);
       round(dc, x, y, SIZE, SIZE, RADIUS, true);
-
-      // border
-      dc.setStrokeColor(UI.HM_BORDER);
-      dc.setLineWidth(0.5);
-      round(dc, x, y, SIZE, SIZE, RADIUS, false);
     }
   }
 
   const st = parent.addStack();
+  st.centerAlignContent();
   const iv = st.addImage(dc.getImage());
   iv.imageSize = new Size(canvasW, canvasH);
   iv.centerAlignImage();
 }
 
-function addLegend(parent) {
-  const row = parent.addStack();
-  row.centerAlignContent();
+// Clean centered legend below the grid
+function addLegendBelow(parent) {
+  const legend = parent.addStack();
+  legend.centerAlignContent();
+  legend.layoutHorizontally();
+  legend.spacing = 12;
+
   function chip(color, label) {
-    const s = row.addStack();
-    s.centerAlignContent();
-    const dc = new DrawContext();
-    dc.size = new Size(18, 12);
-    dc.opaque = false;
-    dc.setFillColor(color);
-    round(dc, 0, 0, 10, 10, 2, true);
-    const img = dc.getImage();
-    const iv = s.addImage(img);
-    iv.imageSize = new Size(10,10);
-    s.addSpacer(4);
-    const t = s.addText(label);
-    t.textColor = UI.MUTED;
-    t.font = Font.mediumSystemFont(9);
+    const stack = legend.addStack();
+    stack.centerAlignContent();
+    const box = new DrawContext();
+    box.size = new Size(10, 10);
+    box.opaque = false;
+    box.setFillColor(color);
+    round(box, 0, 0, 10, 10, 2, true);
+    const boxImg = box.getImage();
+    const iv = stack.addImage(boxImg);
+    iv.imageSize = new Size(10, 10);
+    stack.addSpacer(4);
+    const txt = stack.addText(label);
+    txt.textColor = UI.MUTED;
+    txt.font = Font.mediumSystemFont(9);
   }
-  chip(UI.HM_LIVED, "Lived"); row.addSpacer(12);
-  chip(UI.HM_NOW, "Now");     row.addSpacer(12);
+
+  chip(UI.HM_LIVED, "Lived");
+  legend.addSpacer(12);
+  chip(UI.HM_NOW, "Now");
+  legend.addSpacer(12);
   chip(UI.HM_FUTURE, "Future");
 }
 
-//////////////////////// CALCS + HELPERS ////////////////////////
+//////////////////////// HELPERS ////////////////////////
 function computeStats(dobISO, targetAge) {
   const dob = new Date(`${dobISO}T00:00:00`);
-  if (isNaN(dob.getTime())) throw new Error(`Invalid DOB: ${dobISO}`);
-
   const now = new Date();
-  // years lived (approx, same spirit as preview)
-  const yearsLived = Math.max(0, Math.floor((now - dob) / (365.2425 * 24 * 3600 * 1000)));
+  const yearsLived = Math.max(
+    0,
+    Math.floor((now - dob) / (365.2425 * 24 * 3600 * 1000))
+  );
   const monthsLived = Math.max(0, Math.floor(yearsLived * 12));
   const pctLived = Math.min(1, yearsLived / Math.max(1, targetAge));
-
   return { yearsLived, monthsLived, pctLived };
-}
-
-function chooseYearsPerRow(targetAge) {
-  if (targetAge <= 40) return 10;
-  if (targetAge <= 60) return 12;
-  if (targetAge <= 80) return 10;
-  return 12;
 }
 
 function formatDOB(iso) {
   const d = new Date(`${iso}T00:00:00`);
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  const m = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+  return `${m[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
 
 function round(dc, x, y, w, h, r, fill) {
   const p = new Path();
   p.addRoundedRect(new Rect(x, y, w, h), r, r);
   dc.addPath(p);
-  if (fill) dc.fillPath(); else dc.strokePath();
+  if (fill) dc.fillPath();
+  else dc.strokePath();
 }
