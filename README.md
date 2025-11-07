@@ -6,7 +6,9 @@
 
 > **Enjoy having your device’s hardware but want to do more with it?**
 
-With Scriptable, you can take almost complete control of your iOS device through customizable scripts—no app store restrictions or fees involved.
+> **Wish there was a phone with the ability to customize your hardware and operating system?**
+
+Well, that last part may not be obtainable yet, but With Scriptable, you can automate and extend many parts of your iOS device through customizable scripts—no app store restrictions or fees involved.
 
 Leverage JavaScript to automate tasks, integrate with APIs, access device features, display analytics, or even streamline processes. Turn your iPhone into a programmable tool that works precisely the way you need it, maybe even more.
 
