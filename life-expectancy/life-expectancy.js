@@ -20,22 +20,22 @@ const UI = {
   MUTED: new Color("#8b82a8"),
 
   BAR_BG: new Color("#14121f"),
-  BAR_FILL: new Color("#7b9cff"),
+  BAR_FILL: new Color("#7b9cff"), // slightly bluer for balance
   BAR_H: 6,
   BAR_RADIUS: 4,
 
   HM_LIVED: new Color("#5b4b8a"),
   HM_NOW: new Color("#b794f6"),
   HM_FUTURE: new Color("#1e1b2e"),
-  HM_BORDER: new Color("#3b4fa3"),
+  HM_BORDER: new Color("#3b4fa3"), // soft sapphire border color
 };
 
 const SPEC = { w: 338, h: 354 };
 
 //////////////////////// CONFIG ////////////////////////
 const CFG = {
-  DOB: "", // YYYY-MM-DD
-  MODE: "lifespan", // lifespan | retirement
+  DOB: "",
+  MODE: "lifespan",
   TARGET_AGE: 80,
 };
 
@@ -105,7 +105,7 @@ const CFG = {
 
     // ----- Heatmap (6x12 grid) -----
     w.addSpacer(10);
-    addFixedHeatmap(w, S);
+    addHeatmap(w, S);
 
     // ----- Legend -----
     w.addSpacer(8);
@@ -167,14 +167,15 @@ function addWebStyleProgress(parent, pct) {
   pctText.font = Font.mediumSystemFont(10);
 }
 
-// 6x12 grid with blue borders
-function addFixedHeatmap(parent, S) {
-  const rows = 6;
+// Dynamic grid sized to TARGET_AGE
+function addHeatmap(parent, S) {
   const cols = 12;
-  const GAP = 3;
-  const SIZE = 23;
-  const RADIUS = 2;
+  const activeCells = CFG.TARGET_AGE; // number of squares should equal target age
+  const rows = Math.ceil(activeCells / cols);
 
+  const GAP = 3,
+    SIZE = 23,
+    RADIUS = 2;
   const canvasW = cols * SIZE + (cols - 1) * GAP;
   const canvasH = rows * SIZE + (rows - 1) * GAP;
 
@@ -182,28 +183,33 @@ function addFixedHeatmap(parent, S) {
   dc.size = new Size(canvasW, canvasH);
   dc.opaque = false;
 
-  const totalCells = rows * cols;
-  const livedYears = Math.min(S.yearsLived, totalCells - 1);
+  // index of the "now" square scaled to the number of active cells
+  const nowIdx = Math.min(
+    activeCells - 1,
+    Math.floor(S.pctLived * (activeCells - 1))
+  );
 
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const idx = r * cols + c;
-      const x = c * (SIZE + GAP);
-      const y = r * (SIZE + GAP);
+  const totalCells = rows * cols; // includes any trailing, unused cells
 
-      let fill = UI.HM_FUTURE;
-      if (idx < livedYears) fill = UI.HM_LIVED;
-      else if (idx === livedYears) fill = UI.HM_NOW;
+  for (let idx = 0; idx < totalCells; idx++) {
+    const r = Math.floor(idx / cols);
+    const c = idx % cols;
+    const x = c * (SIZE + GAP);
+    const y = r * (SIZE + GAP);
 
-      // Draw filled cell
-      dc.setFillColor(fill);
-      round(dc, x, y, SIZE, SIZE, RADIUS, true);
+    // Do not draw cells beyond the target age (keeps total squares == TARGET_AGE)
+    if (idx >= activeCells) continue;
 
-      // Draw border
-      dc.setStrokeColor(UI.HM_BORDER);
-      dc.setLineWidth(0.8);
-      round(dc, x, y, SIZE, SIZE, RADIUS, false);
-    }
+    let fill = UI.HM_FUTURE;
+    if (idx < nowIdx) fill = UI.HM_LIVED;
+    else if (idx === nowIdx) fill = UI.HM_NOW;
+
+    dc.setFillColor(fill);
+    round(dc, x, y, SIZE, SIZE, RADIUS, true);
+
+    dc.setStrokeColor(UI.HM_BORDER);
+    dc.setLineWidth(0.8);
+    round(dc, x, y, SIZE, SIZE, RADIUS, false);
   }
 
   const st = parent.addStack();
