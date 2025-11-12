@@ -103,9 +103,9 @@ const CFG = {
     w.addSpacer(10);
     addWebStyleProgress(w, S.pctLived);
 
-    // ----- Heatmap (6x12 grid) -----
+    // ----- Waffle Chart (6x12 grid) -----
     w.addSpacer(10);
-    addHeatmap(w, S);
+    addWaffleMap(w, S);
 
     // ----- Legend -----
     w.addSpacer(8);
@@ -119,7 +119,7 @@ const CFG = {
     const s = w.addStack();
     s.layoutVertically();
     s.setPadding(16, 16, 16, 16);
-    const t = s.addText("Heat Map — Error");
+    const t = s.addText("Waffle Chart — Error");
     t.textColor = new Color("#ffb4b4");
     t.font = Font.boldSystemFont(14);
     s.addSpacer(6);
@@ -168,7 +168,7 @@ function addWebStyleProgress(parent, pct) {
 }
 
 // Dynamic grid sized to TARGET_AGE
-function addHeatmap(parent, S) {
+function addWaffleMap(parent, S) {
   const cols = 12;
   const activeCells = CFG.TARGET_AGE; // number of squares should equal target age
   const rows = Math.ceil(activeCells / cols);
