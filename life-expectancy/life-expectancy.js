@@ -73,7 +73,7 @@ const CFG = {
     const subtitle = left.addText(
       CFG.MODE === "retirement"
         ? `To Retirement (Age ${CFG.TARGET_AGE})`
-        : `Mileage (Age ${CFG.TARGET_AGE})`
+        : `Duration (Age ${CFG.TARGET_AGE})`
     );
     subtitle.textColor = UI.MUTED;
     subtitle.font = Font.mediumSystemFont(11);
