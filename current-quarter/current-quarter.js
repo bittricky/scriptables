@@ -239,7 +239,7 @@ async function createWidget() {
   right.layoutVertically();
   right.spacing = 3;
 
-  const l1 = right.addText(`Year:   ${fmtPct(info.yearPct)}`);
+  const l1 = right.addText(`Year: ${fmtPct(info.yearPct)}`);
   l1.font = Font.mediumSystemFont(13);
   l1.textColor = new Color(ACCENT_OUTER);
 
