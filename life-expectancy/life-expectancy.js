@@ -94,7 +94,12 @@ const CFG = {
     const days = right.addText(`${S.daysLived.toLocaleString()} days`);
     days.textColor = UI.MUTED;
     days.font = Font.mediumSystemFont(10);
-  
+    const hours = right.addText(`${S.hoursLived.toLocaleString()} hours`);
+    hours.textColor = UI.MUTED;
+    hours.font = Font.mediumSystemFont(10);
+    const minutes = right.addText(`${S.minutesLived.toLocaleString()} minutes`);
+    minutes.textColor = UI.MUTED;
+    minutes.font = Font.mediumSystemFont(10);
 
     // ----- DOB -----
     w.addSpacer(8);
@@ -268,8 +273,19 @@ function computeStats(dobISO, targetAge) {
   const monthsLived = Math.max(0, Math.floor(yearsLived * 12));
   const daysLived = Math.max(0, Math.floor(yearsLived * 365));
   const weeksLived = Math.max(0, Math.floor((yearsLived * 365) / 7));
+  const hoursLived = Math.max(0, Math.floor(yearsLived * 365.25 * 24));
+  const minutesLived = Math.max(0, Math.floor(yearsLived * 365.25 * 24 * 60));
+
   const pctLived = Math.min(1, yearsLived / Math.max(1, targetAge));
-  return { yearsLived, monthsLived, pctLived, daysLived, weeksLived };
+  return {
+    yearsLived,
+    monthsLived,
+    pctLived,
+    daysLived,
+    weeksLived,
+    hoursLived,
+    minutesLived,
+  };
 }
 
 function formatDOB(iso) {
