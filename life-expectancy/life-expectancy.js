@@ -34,7 +34,7 @@ const SPEC = { w: 338, h: 354 };
 
 //////////////////////// CONFIG ////////////////////////
 const CFG = {
-  DOB: "",
+  DOB: "yyyy-mm-dd",
   MODE: "lifespan",
   TARGET_AGE: 80,
 };
@@ -88,6 +88,13 @@ const CFG = {
     const months = right.addText(`${S.monthsLived.toLocaleString()} months`);
     months.textColor = UI.MUTED;
     months.font = Font.mediumSystemFont(10);
+    const weeks = right.addText(`${S.weeksLived.toLocaleString()} weeks`);
+    weeks.textColor = UI.MUTED;
+    weeks.font = Font.mediumSystemFont(10);
+    const days = right.addText(`${S.daysLived.toLocaleString()} days`);
+    days.textColor = UI.MUTED;
+    days.font = Font.mediumSystemFont(10);
+  
 
     // ----- DOB -----
     w.addSpacer(8);
@@ -259,8 +266,10 @@ function computeStats(dobISO, targetAge) {
     Math.floor((now - dob) / (365.2425 * 24 * 3600 * 1000))
   );
   const monthsLived = Math.max(0, Math.floor(yearsLived * 12));
+  const daysLived = Math.max(0, Math.floor(yearsLived * 365));
+  const weeksLived = Math.max(0, Math.floor((yearsLived * 365) / 7));
   const pctLived = Math.min(1, yearsLived / Math.max(1, targetAge));
-  return { yearsLived, monthsLived, pctLived };
+  return { yearsLived, monthsLived, pctLived, daysLived, weeksLived };
 }
 
 function formatDOB(iso) {
