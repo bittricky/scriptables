@@ -12,23 +12,51 @@
  */
 
 //////////////////////// THEME ////////////////////////
-const UI = {
-  BG: new Color("#05050d"),
-  OUTER_PAD: 16,
 
-  TITLE: new Color("#e8e6ff"),
-  MUTED: new Color("#8b82a8"),
+const isDark = Device.isUsingDarkAppearance();
 
-  BAR_BG: new Color("#14121f"),
-  BAR_FILL: new Color("#7b9cff"), // slightly bluer for balance
-  BAR_H: 6,
-  BAR_RADIUS: 4,
+// Core palette is kept the same; light mode uses softer tints derived
+// from the existing colors so the look stays consistent with your original.
+const UI = isDark
+  ? {
+      // ----- DARK MODE -----
+      BG: new Color("#05030B"),
+      OUTER_PAD: 16,
 
-  HM_LIVED: new Color("#5b4b8a"),
-  HM_NOW: new Color("#b794f6"),
-  HM_FUTURE: new Color("#1e1b2e"),
-  HM_BORDER: new Color("#3b4fa3"), // soft sapphire border color
-};
+      TITLE: new Color("#e8e6ff"),
+      MUTED: new Color("#8b82a8"),
+
+      BAR_BG: new Color("#14121f"),
+      BAR_FILL: new Color("#7b9cff"), // same accent
+
+      BAR_H: 6,
+      BAR_RADIUS: 4,
+
+      HM_LIVED: new Color("#5b4b8a"),
+      HM_NOW: new Color("#b794f6"),
+      HM_FUTURE: new Color("#1e1b2e"),
+      HM_BORDER: new Color("#3b4fa3"),
+    }
+  : {
+      // ----- LIGHT MODE -----
+      BG: new Color("#F8F6FF"), // soft near-white with a lilac hint
+      OUTER_PAD: 16,
+
+      TITLE: new Color("#1e1630"), // dark counterpart to #e8e6ff
+      MUTED: new Color("#8b82a8"), // works in both modes
+
+      BAR_BG: new Color("#dedaf5"), // lightened from #14121f
+      BAR_FILL: new Color("#7b9cff"), // same accent
+
+      BAR_H: 6,
+      BAR_RADIUS: 4,
+
+      // Tints of the original waffle colors
+      HM_LIVED: new Color("#d1c4ff"),
+      HM_NOW: new Color("#b794f6"),
+      HM_FUTURE: new Color("#f0ecff"),
+      HM_BORDER: new Color("#c3c7ff"),
+    };
 
 const SPEC = { w: 338, h: 354 };
 
@@ -82,15 +110,19 @@ const CFG = {
 
     const right = header.addStack();
     right.layoutVertically();
-    const years = right.addText(`${S.yearsLived} years`);
+
+    const years = right.addText(`${S.yearsLived.toLocaleString()} years`);
     years.textColor = UI.TITLE;
     years.font = Font.semiboldSystemFont(14);
+
     const months = right.addText(`${S.monthsLived.toLocaleString()} months`);
     months.textColor = UI.MUTED;
     months.font = Font.mediumSystemFont(10);
+
     const weeks = right.addText(`${S.weeksLived.toLocaleString()} weeks`);
     weeks.textColor = UI.MUTED;
     weeks.font = Font.mediumSystemFont(10);
+
     const days = right.addText(`${S.daysLived.toLocaleString()} days`);
     days.textColor = UI.MUTED;
     days.font = Font.mediumSystemFont(10);
@@ -109,7 +141,7 @@ const CFG = {
     w.addSpacer(10);
     addWebStyleProgress(w, S.pctLived);
 
-    // ----- Waffle Chart (6x12 grid) -----
+    // ----- Waffle Chart (dynamic grid) -----
     w.addSpacer(10);
     addWaffleMap(w, S);
 
@@ -261,21 +293,29 @@ function addLegendBelow(parent) {
 function computeStats(dobISO, targetAge) {
   const dob = new Date(`${dobISO}T00:00:00`);
   const now = new Date();
-  const yearsLived = Math.max(
-    0,
-    Math.floor((now - dob) / (365.2425 * 24 * 3600 * 1000))
-  );
-  const monthsLived = Math.max(0, Math.floor(yearsLived * 12));
-  const weeksLived = Math.max(0, Math.floor((yearsLived * 365) / 7));
-  const daysLived = Math.max(0, Math.floor(yearsLived * 365));
-  const pctLived = Math.min(1, yearsLived / Math.max(1, targetAge));
+
+  // Total elapsed time in ms
+  const msLived = Math.max(0, now - dob);
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+  const daysLived = Math.floor(msLived / MS_PER_DAY);
+  const weeksLived = Math.floor(daysLived / 7);
+
+  // Use an average year length to get a continuous age
+  const yearsPrecise = daysLived / 365.2425;
+  const yearsLived = Math.floor(yearsPrecise);
+
+  // Total months lived (not months-in-current-year)
+  const monthsLived = Math.floor(yearsPrecise * 12);
+
+  const pctLived = Math.min(1, yearsPrecise / Math.max(1, targetAge));
 
   return {
     yearsLived,
     monthsLived,
-    pctLived,
-    daysLived,
     weeksLived,
+    daysLived,
+    pctLived,
   };
 }
 

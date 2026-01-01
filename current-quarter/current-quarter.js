@@ -1,11 +1,14 @@
+// Variables used by Scriptable.
+// These must be at the very top of the file. Do not edit.
+// icon-color: deep-blue; icon-glyph: clock;
 /************ CONFIG ************/
 const ACCENT_OUTER = "#8B5CF6"; // vivid purple (year)
-const ACCENT_INNER = "#FACC15"; // vibrant yellow (quarter)
+const ACCENT_INNER = "#EAB308"; // vibrant yellow (quarter)
 const ACCENT_TEXT = "#3B82F6"; // blue for side text
 
-// Base ring colors
-const BASE_RING_DARK = "#433366"; // deep contemplative purple
-const BASE_RING_LIGHT = "#E5DEFF"; // soft lavender
+// Base ring colors - now with proper light/dark contrast
+const BASE_RING_DARK = "#FFFFFF"; // white rings in dark mode
+const BASE_RING_LIGHT = "#D1D5DB"; // light gray rings in light mode
 
 // Backgrounds tuned to complement rings
 const BG_GRAD_TOP = "#2A1A5E";
@@ -118,10 +121,10 @@ function dualRingImage(diameter, yearPct, quarterPct) {
   const innerRadius =
     outerRadius - (OUTER_STROKE / 2 + RING_GAP + INNER_STROKE / 2);
 
-  // Base ring color
+  // Base ring color - white in dark mode, gray in light mode
   const baseRingColor = Color.dynamic(
-    new Color(BASE_RING_LIGHT),
-    new Color(BASE_RING_DARK)
+    new Color(BASE_RING_DARK),
+    new Color(BASE_RING_LIGHT)
   );
   dc.setStrokeColor(baseRingColor);
 
@@ -147,7 +150,7 @@ function dualRingImage(diameter, yearPct, quarterPct) {
     )
   );
 
-  // Progress arcs (12 o’clock start, clockwise)
+  // Progress arcs (12 o'clock start, clockwise)
   const start = -Math.PI / 2;
 
   // Outer: year
@@ -187,10 +190,10 @@ function dualRingImage(diameter, yearPct, quarterPct) {
   }
 
   const r = 7; // radius (px)
-  dc.setStrokeColor(new Color("#EF4444")); // crimson
-  dc.setLineWidth(1);
+  dc.setStrokeColor(new Color("#EF4444")); // circle outline color
+  dc.setLineWidth(2); // thin border
   dc.strokeEllipse(new Rect(cx - r, cy - r, r * 2, r * 2));
-  
+
   return dc.getImage();
 }
 
