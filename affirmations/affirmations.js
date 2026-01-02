@@ -278,7 +278,8 @@ async function getAffirmationData() {
     "Choose to value what you have now rather than mourn what has passed.",
     "You don't have to wear your money to feel valuable.",
     "In the vast darkness of space, you must become your own light.",
-    "Choose growth over vengeance"
+    "Choose growth over vengeance",
+    "You are not what you can afford."
   ];
   return {
     text: fallback[Math.floor(Math.random() * fallback.length)],
