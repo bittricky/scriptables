@@ -247,11 +247,20 @@ async function getAffirmationData() {
     "D&D it's dynomite",
     "Just Breathe",
     "Your trauma doesn't have to define you",
-     "It’s okay to take things one step at a time.",
+    "It’s okay to take things one step at a time.",
     "Small progress is still progress",
     "Don't lose yourself to comparisons",
     "Believe in your own efforts, even when it feels invisible.",
-    "It’s okay to take things one step at a time."
+    "It’s okay to take things one step at a time.",
+    "Misunderstanding does not equal wrongdoing.",
+    "History informs, but it does not have to define.",
+    "You are more than your mistakes.",
+    "Being human includes imperfection.",
+    "Strength does not always look loud and glamorous.",
+    "Rest is also progress.",
+    "Struggle does not erase worth.",
+    "You are worthy of kindness, especially from yourself.",
+    "Healing is not linear."
   ];
   return {
     text: fallback[Math.floor(Math.random() * fallback.length)],
