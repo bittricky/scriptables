@@ -275,7 +275,7 @@ async function getAffirmationData() {
     "Every day is a new opportunity for growth.",
     "False narratives lose power when not accepted.",
     "A person is more than their worst moment.",
-    "It's time in the market, not timing the market."
+    "Choose to value what you have now rather than mourn what has passed."
   ];
   return {
     text: fallback[Math.floor(Math.random() * fallback.length)],
