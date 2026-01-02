@@ -260,7 +260,13 @@ async function getAffirmationData() {
     "Rest is also progress.",
     "Struggle does not erase worth.",
     "You are worthy of kindness, especially from yourself.",
-    "Healing is not linear."
+    "Healing is not linear.",
+    "Money measures exchange, it does not always have to define the value of a human being.",
+    "Outcomes can hide unseen costs.",
+    "Social comparison alters self-evaluation, not ability.",
+    "Comparison bends the mirror.",
+    "What is shown may not be the whole.",
+    "Status and wealth can measure position, but not substance."
   ];
   return {
     text: fallback[Math.floor(Math.random() * fallback.length)],
