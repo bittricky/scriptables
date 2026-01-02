@@ -251,7 +251,6 @@ async function getAffirmationData() {
     "Small progress is still progress",
     "Don't lose yourself to comparisons",
     "Believe in your own efforts, even when it feels invisible.",
-    "It’s okay to take things one step at a time.",
     "Misunderstanding does not equal wrongdoing.",
     "History informs, but it does not have to define.",
     "You are more than your mistakes.",
