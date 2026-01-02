@@ -275,7 +275,10 @@ async function getAffirmationData() {
     "Every day is a new opportunity for growth.",
     "False narratives lose power when not accepted.",
     "A person is more than their worst moment.",
-    "Choose to value what you have now rather than mourn what has passed."
+    "Choose to value what you have now rather than mourn what has passed.",
+    "You don't have to wear your money to feel valuable.",
+    "In the vast darkness of space, you must become your own light.",
+    "Choose growth over vengeance"
   ];
   return {
     text: fallback[Math.floor(Math.random() * fallback.length)],
