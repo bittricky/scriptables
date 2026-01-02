@@ -250,7 +250,7 @@ async function getAffirmationData() {
      "It’s okay to take things one step at a time.",
     "Small progress is still progress",
     "Don't lose yourself to comparisons",
-    "Believe in your effort matters, even when it feels invisible.",
+    "Believe in your own efforts, even when it feels invisible.",
     "It’s okay to take things one step at a time."
   ];
   return {
