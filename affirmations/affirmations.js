@@ -265,7 +265,7 @@ async function getAffirmationData() {
     "Social comparison alters self-evaluation, not ability.",
     "Comparison bends the mirror.",
     "What is shown may not be the whole.",
-    "Status and wealth can measure position, but not substance.",
+    "Status and wealth can measure position, but not always substance.",
     "Surviving is not weakness.",
     "Being broken is not the end; there is room to become something new.",
     "Wholeness can include fractures.",
