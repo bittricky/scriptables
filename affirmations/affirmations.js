@@ -275,7 +275,7 @@ async function getAffirmationData() {
     "Social comparison alters self-evaluation, not ability.",
     "Comparison bends the mirror.",
     "What is shown may not be the whole.",
-    "Status and wealth can measure position, but not substance.",
+    "Status and wealth can measure position, but not always substance.",
     "Surviving is not weakness.",
     "Being broken is not the end; there is space to make something whole.",
     "Wholeness can include fractures.",
@@ -286,6 +286,10 @@ async function getAffirmationData() {
     "False narratives lose power when not accepted.",
     "A person is more than their worst moment.",
     "Choose to value what you have now rather than mourn what has passed.",
+    "You don't have to wear your money to feel valuable.",
+    "In the vast darkness of space, you must become your own light.",
+    "Choose growth over vengeance.",
+    "You are not what you can afford.",
   ];
   return {
     text: fallback[Math.floor(Math.random() * fallback.length)],
