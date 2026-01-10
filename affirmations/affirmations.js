@@ -125,7 +125,8 @@ function getWidgetSize() {
   const allowed = ["small", "medium", "large"];
 
   // Scriptable’s global config.widgetFamily is the most reliable
-  if (config.widgetFamily && allowed.includes(config.widgetFamily)) return config.widgetFamily;
+  if (config.widgetFamily && allowed.includes(config.widgetFamily))
+    return config.widgetFamily;
 
   // Optional manual param via widget parameter: "small|medium|large"
   if (args.widgetParameter) {
@@ -168,7 +169,8 @@ function isCacheFresh(cacheObj) {
 
 function pickApiKey() {
   const keys = Object.keys(SETTINGS.apis);
-  if (!SETTINGS.useRandomApi) return SETTINGS.apiSource in SETTINGS.apis ? SETTINGS.apiSource : keys[0];
+  if (!SETTINGS.useRandomApi)
+    return SETTINGS.apiSource in SETTINGS.apis ? SETTINGS.apiSource : keys[0];
   return keys[Math.floor(Math.random() * keys.length)];
 }
 
@@ -215,7 +217,11 @@ async function getAffirmationData() {
   // 1) Fresh cache for selected
   const selectedCache = readCache(selectedApiKey);
   if (selectedCache && isCacheFresh(selectedCache)) {
-    return { ...selectedCache.data, source: SETTINGS.apis[selectedApiKey].name, fromCache: true };
+    return {
+      ...selectedCache.data,
+      source: SETTINGS.apis[selectedApiKey].name,
+      fromCache: true,
+    };
   }
 
   // 2) Try selected online
@@ -230,11 +236,16 @@ async function getAffirmationData() {
 
   // 4) Any cache available
   if (selectedCache?.data?.text) {
-    return { ...selectedCache.data, source: SETTINGS.apis[selectedApiKey].name, fromCache: true };
+    return {
+      ...selectedCache.data,
+      source: SETTINGS.apis[selectedApiKey].name,
+      fromCache: true,
+    };
   }
   for (const k of otherApiKeys) {
     const c = readCache(k);
-    if (c?.data?.text) return { ...c.data, source: SETTINGS.apis[k].name, fromCache: true };
+    if (c?.data?.text)
+      return { ...c.data, source: SETTINGS.apis[k].name, fromCache: true };
   }
 
   // 5) Hardcoded fallback
@@ -242,9 +253,8 @@ async function getAffirmationData() {
     "You are capable of amazing things.",
     "Today is full of possibilities.",
     "You have the strength to overcome challenges.",
-    "Your potential is limitless.",
     "You do You.",
-    "D&D, it's dynomite.",
+    "D & D, it's dy-no-mite!",
     "Just Breathe.",
     "Your trauma doesn't have to define you.",
     "It’s okay to take things one step at a time.",
@@ -252,7 +262,7 @@ async function getAffirmationData() {
     "Don't lose yourself to comparisons.",
     "Believe in your own efforts, even when it feels invisible.",
     "Misunderstanding does not equal wrongdoing.",
-    "History informs, but it does not have to define.",
+    "History informs, but we are defined by how we act on it.",
     "You are more than your mistakes.",
     "Being human includes imperfection.",
     "Strength does not always look loud and glamorous.",
@@ -267,7 +277,7 @@ async function getAffirmationData() {
     "What is shown may not be the whole.",
     "Status and wealth can measure position, but not substance.",
     "Surviving is not weakness.",
-    "Being broken is not the end; there is room to become something new.",
+    "Being broken is not the end; there is space to make something whole.",
     "Wholeness can include fractures.",
     "Strength emerges through repair.",
     "It's okay to ask for help when you need it.",
@@ -275,7 +285,7 @@ async function getAffirmationData() {
     "Every day is a new opportunity for growth.",
     "False narratives lose power when not accepted.",
     "A person is more than their worst moment.",
-    "Choose to value what you have now rather than mourn what has passed."
+    "Choose to value what you have now rather than mourn what has passed.",
   ];
   return {
     text: fallback[Math.floor(Math.random() * fallback.length)],
@@ -292,7 +302,12 @@ async function tryFetchFromApi(apiKey) {
     const parsed = api.parse(response);
     if (!parsed?.text) return null;
 
-    const data = { text: parsed.text, author: parsed.author, source: api.name, fromCache: false };
+    const data = {
+      text: parsed.text,
+      author: parsed.author,
+      source: api.name,
+      fromCache: false,
+    };
     writeCache(apiKey, { text: data.text, author: data.author }); // cache only core fields
     return data;
   } catch (e) {
@@ -303,7 +318,10 @@ async function tryFetchFromApi(apiKey) {
 
 function formatTime(ts = Date.now()) {
   // Short time like “2:41 PM”
-  return new Date(ts).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  return new Date(ts).toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 // -------------------------
@@ -331,7 +349,8 @@ async function createWidget(size) {
     main.centerAlignText();
 
     main.lineLimit = LINE_LIMITS[size] ?? 5;
-    main.minimumScaleFactor = size === "small" ? 0.75 : size === "medium" ? 0.82 : 0.9;
+    main.minimumScaleFactor =
+      size === "small" ? 0.75 : size === "medium" ? 0.82 : 0.9;
 
     // Author
     if (data.author && size !== "small") {
@@ -349,7 +368,9 @@ async function createWidget(size) {
     // Footer (large only)
     if (size === "large" && SETTINGS.showFooterOnLarge) {
       mainStack.addSpacer(6);
-      const footer = `${data.source}${data.fromCache ? " • Cached" : ""} • Updated: ${formatTime()}`;
+      const footer = `${data.source}${
+        data.fromCache ? " • Cached" : ""
+      } • Updated: ${formatTime()}`;
       const foot = mainStack.addText(footer);
       foot.font = Font.systemFont(fonts.footer);
       foot.textColor = COLORS.muted;
