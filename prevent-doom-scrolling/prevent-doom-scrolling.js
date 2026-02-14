@@ -43,6 +43,8 @@ const CONFIG = {
     "Facebook",
     "YouTube",
     "Snapchat",
+    "Bluesky",
+    "Mastodon",
   ],
 
   // Daily time limit in minutes
