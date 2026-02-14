@@ -162,7 +162,7 @@ mathDifficulty: "easy",       // Easier math
 
 ### Change Math Difficulty
 
-Options: `"easy"`, `"medium"`, `"hard"`
+Options: `"easy"`, `"medium"`, `"hard"`, `"advanced"`, `"expert"`
 
 - **Easy**: Simple addition (e.g., 12 + 8)
 - **Medium**: Addition/subtraction with larger numbers (e.g., 47 - 23)
