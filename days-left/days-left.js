@@ -1,5 +1,5 @@
 // Scriptable: Days Left in Year (Small Widget)
-// icon-color: yellow; icon-glyph: magic;
+// icon-color: blue; icon-glyph: magic;
 // Semantics: "Days Left" includes today
 // Refreshes daily shortly after midnight
 
