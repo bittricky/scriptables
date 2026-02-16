@@ -294,7 +294,12 @@ async function getAffirmationData() {
     "With sincere gratitude, optimism becomes sustainable",
     "The sun rises whether or not you doubt it.",
     "What you water, grows.",
-    "Power comes in response to a need, not a desire."
+    "Power comes in response to a need, not a desire.",
+    "Choose the good, not the pleasant.",
+    "Fear ends where knowledge begins.",
+    "You cannot discover your deepest nature if you are ruled by fear",
+    "Clarity requires strength",
+    "Inner truth reveals itself to the steadfast."
   ];
   return {
     text: fallback[Math.floor(Math.random() * fallback.length)],
