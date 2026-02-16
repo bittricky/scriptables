@@ -291,7 +291,10 @@ async function getAffirmationData() {
     "Choose growth over vengeance.",
     "You are not what you can afford.",
     "Jealousy is an ugly color to wear",
-    "With sincere gratitude, optimism becomes sustainable"
+    "With sincere gratitude, optimism becomes sustainable",
+    "The sun rises whether or not you doubt it.",
+    "What you water, grows.",
+    "Power comes in response to a need, not a desire."
   ];
   return {
     text: fallback[Math.floor(Math.random() * fallback.length)],
