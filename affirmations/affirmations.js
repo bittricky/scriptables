@@ -290,6 +290,8 @@ async function getAffirmationData() {
     "In the vast darkness of space, you must become your own light.",
     "Choose growth over vengeance.",
     "You are not what you can afford.",
+    "Jealousy is an ugly color to wear",
+    "With sincere gratitude, optimism becomes sustainable"
   ];
   return {
     text: fallback[Math.floor(Math.random() * fallback.length)],
