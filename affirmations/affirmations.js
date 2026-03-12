@@ -299,7 +299,8 @@ async function getAffirmationData() {
     "Fear ends where knowledge begins.",
     "You cannot discover your deepest nature if you are ruled by fear",
     "Clarity requires strength",
-    "Inner truth reveals itself to the steadfast."
+    "Inner truth reveals itself to the steadfast.",
+    "As a blazing fire turns firewood to ashes, so does the fire of knowledge burn to ashes all reactions to material activities"
   ];
   return {
     text: fallback[Math.floor(Math.random() * fallback.length)],
