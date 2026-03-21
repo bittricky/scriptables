@@ -14,15 +14,23 @@ var WUE = 1.8;
 var PUE = 1.5;
 var TOKENS_PER_WORD = 1.33;
 var WHO_L_PER_DAY = 2.0;
+var ML_PER_CUP = 237;
 var ML_PER_TOKEN = KWH_PER_TOKEN * PUE * WUE * 1000;
 
 function calc(promptText, outputWords) {
-  var inputWords = promptText.trim().length === 0 ? 0 : promptText.trim().split(/\s+/).length;
+  var trimmed = promptText.trim();
+  var inputWords = trimmed.length === 0 ? 0 : trimmed.split(/\s+/).length;
   var tokens = Math.round((inputWords + outputWords) * TOKENS_PER_WORD);
   var ml = tokens * ML_PER_TOKEN;
-  var wh = tokens * KWH_PER_TOKEN * PUE * 1000;
+  var wh = tokens * KWH_PER_TOKEN * 1000;
   var minutes = (ml / 1000 / WHO_L_PER_DAY) * 24 * 60;
-  return { tokens: tokens, ml: ml, wh: wh, minutes: minutes };
+  return {
+    tokens: tokens,
+    ml: ml,
+    wh: wh,
+    minutes: minutes,
+    inputWords: inputWords,
+  };
 }
 
 async function main() {
@@ -44,10 +52,11 @@ async function main() {
   var r = calc(prompt, replyWords);
 
   var msg = "";
+  msg += "Input:   " + r.inputWords + " words\n";
   msg += "Tokens:  " + r.tokens + "\n";
   msg += "Energy:  " + r.wh.toFixed(4) + " Wh\n";
   msg += "Water:   " + r.ml.toFixed(2) + " mL evaporated\n";
-  msg += "         " + (r.ml / 237).toFixed(3) + " US cups\n";
+  msg += "         " + (r.ml / ML_PER_CUP).toFixed(3) + " US cups\n";
   msg += "\n";
   msg += "= " + r.minutes.toFixed(1) + " min of one person's\n";
   msg += "  daily drinking water (WHO 2L/day)\n";
