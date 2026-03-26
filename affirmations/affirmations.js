@@ -301,7 +301,8 @@ async function getAffirmationData() {
     "Clarity requires strength",
     "Inner truth reveals itself to the steadfast.",
     "As a blazing fire turns firewood to ashes, so does the fire of knowledge burn to ashes all reactions to material activities",
-    "The world is full of those who sit atop tears stolen from others and those who turn their own tears into gifts"
+    "The world is full of those who sit atop tears stolen from others and those who turn their own tears into gifts",
+    "Passive aggressive behavior is counterproductive. Communication is key to a healthy personal and work relationship."
   ];
   return {
     text: fallback[Math.floor(Math.random() * fallback.length)],
