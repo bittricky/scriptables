@@ -1,6 +1,6 @@
 // Variables used by Scriptable.
 // icon-color: blue; icon-glyph: map-marked-alt;
-// Beach Please — Vacation Countdown
+// Beach Please — Vacation Countdown Timer - Treat Yo Self. Stressed spelled backwards is desserts.
 // Refreshes daily shortly after midnight
 // Widget parameter (optional): "2026-12-20|Bali" — date|label
 
